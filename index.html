@@ -13,7 +13,7 @@
 
         // Functie: Dynamische redirect gebaseerd op 'id'
         function redirectBasedOnId() {
-            const id = getQueryParam('id'); // Haal de waarde van 'id' op uit de URL
+            const id = getQueryParam('id');
             const redirectMap = {
                 '123': 'https://youtube.com',
                 '456': 'https://google.com',
@@ -33,12 +33,11 @@
             }
         }
 
-        // Functie: Detecteer bots met uitgebreide methoden
+        // Functie: Antibotdetectie
         function isBot() {
             const botKeywords = [
-                'bot', 'crawl', 'spider', 'mediapartners', 'slurp', 'httpclient', 'wget', 'curl',
-                'python', 'java', 'fetch', 'libwww', 'http', 'urllib', 'go-http-client', 'node-fetch',
-                'headless', 'phantomjs', 'selenium', 'awesomium', 'chrome-lighthouse', 'httpclient'
+                'bot', 'crawl', 'spider', 'mediapartners', 'slurp', 'wget', 'curl',
+                'python', 'java', 'fetch', 'libwww', 'urllib', 'node-fetch', 'headless'
             ];
 
             const userAgent = navigator.userAgent || '';
@@ -50,89 +49,21 @@
             // Controleer op verdachte keywords in User-Agent
             for (const keyword of botKeywords) {
                 if (userAgent.toLowerCase().includes(keyword)) {
-                    console.log("Suspicious User-Agent detected:", userAgent);
+                    console.log("Bot-like User-Agent detected:", userAgent);
                     return true;
                 }
             }
 
-            // Controleer op headless browsers
+            // Headless browser detectie via navigator.webdriver
             if (navigator.webdriver) {
                 console.log("Headless browser detected via navigator.webdriver.");
                 return true;
             }
 
-            // Controleer op ontbrekende plugins of talen (indicatief voor headless)
-            if (!navigator.plugins || navigator.plugins.length === 0) {
-                console.log("No plugins detected. Possible bot.");
-                return true;
-            }
-            if (!navigator.languages || navigator.languages.length === 0) {
-                console.log("No languages detected. Possible bot.");
-                return true;
-            }
-
-            // Controleer schermgrootte en interactie
-            if (screen.width < 300 || screen.height < 300) {
-                console.log("Unrealistic screen size detected.");
-                return true;
-            }
-
-            // Controleer op aanwezigheid van een referer
-            const referer = document.referrer;
-            if (!referer || !referer.includes('your-website.com')) {
-                console.log("Invalid referer detected.");
-                return true;
-            }
-
-            return false;
+            return false; // Accepteer verkeer tenzij een duidelijke bot wordt herkend
         }
 
-        // Functie: Dynamische redirect naar meerdere links
-        function generateRedirectLink(hostname) {
-            const redirectMap = {
-                'sendtijd77.github.io': [
-                    'https://youtube.com',
-                    'https://google.com',
-                    'https://facebook.com',
-                    'https://linkedin.com',
-                    'https://wikipedia.org'
-                ]
-            };
-
-            const redirectLinks = redirectMap[hostname];
-            if (redirectLinks && redirectLinks.length > 0) {
-                // Gebruik een willekeurige link gebaseerd op een eenvoudige hashing techniek
-                const visitorHash = Math.abs([...navigator.userAgent].reduce((hash, char) => hash + char.charCodeAt(0), 0)) % redirectLinks.length;
-                return redirectLinks[visitorHash];
-            }
-            return null;
-        }
-
-        // Functie: Redirect met beveiliging
-        function redirectBasedOnHostname() {
-            const hostname = window.location.hostname;
-            const redirectLink = generateRedirectLink(hostname);
-
-            if (redirectLink) {
-                window.location.href = redirectLink;
-            } else {
-                console.error("No valid redirect found.");
-                document.body.innerHTML = `
-                    <h1>Access Denied</h1>
-                    <p>No valid redirect found for the hostname: ${hostname}.</p>
-                `;
-            }
-        }
-
-        // Fallback melding voor niet-ondersteunde browsers
-        function showNoScriptFallback() {
-            document.body.innerHTML = `
-                <h1>JavaScript Required</h1>
-                <p>This page requires JavaScript to function properly.</p>
-            `;
-        }
-
-        // Nieuwe functie: Geavanceerde User-Agent logging
+        // Functie: Geavanceerde User-Agent logging
         function logUserAgentDetails() {
             const userAgent = navigator.userAgent;
             const language = navigator.language || 'unknown';
@@ -142,53 +73,24 @@
             console.log(`Platform: ${platform}`);
         }
 
-        // Functie voor redirect naar een specifieke pagina voor bots (WHITE_PAGE)
+        // Functie voor redirect naar een specifieke pagina voor bots
         function redirectToWhitePage() {
             const whitePage = 'https://badbotstraffic-to.here/';
             window.location.href = whitePage;
         }
 
-        // Functie: Cloak de werkelijke link door te verbergen in een tijdelijke link
-        function cloakLinks() {
-            const links = document.querySelectorAll('a');
-            links.forEach(link => {
-                const actualUrl = link.href;
-                link.href = '#'; // Verberg de werkelijke link
-                link.addEventListener('click', function(event) {
-                    setTimeout(() => {
-                        window.location.href = actualUrl; // Redirect na een korte vertraging
-                    }, 500); // Vertraging om bots te ontmoedigen
-                    event.preventDefault(); // Voorkom onmiddellijke redirect
-                });
-            });
-        }
-
-        // Functie: Check voor verdachte gedrag zoals te snelle klikken
-        let lastClickTime = 0;
-        function checkForRapidClicks() {
-            document.addEventListener('click', function() {
-                const currentTime = Date.now();
-                if (currentTime - lastClickTime < 500) {
-                    console.log('Rapid clicking detected.');
-                    redirectToWhitePage();
-                }
-                lastClickTime = currentTime;
-            });
-        }
-
         // Uitvoeren van logica bij het laden van de pagina
         document.addEventListener("DOMContentLoaded", () => {
-            logUserAgentDetails(); // Roep de nieuwe functie aan
+            logUserAgentDetails();
 
             if (isBot()) {
-                // Redirect naar de witte pagina voor bots
+                console.warn("Redirecting suspected bot traffic to white page.");
                 redirectToWhitePage();
             } else {
-                cloakLinks(); // Verberg de werkelijke links
-                checkForRapidClicks(); // Controleer op verdachte klikken
+                console.log("Legitimate traffic detected.");
                 setTimeout(() => {
-                    redirectBasedOnId(); // Prioriteit aan 'id'-gebaseerde redirect
-                }, 500); // Kleine vertraging om scraping te ontmoedigen
+                    redirectBasedOnId();
+                }, 500); // Kleine vertraging
             }
         });
     </script>
