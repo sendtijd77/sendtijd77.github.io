@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Antibot & Cloaking System</title>
-    <script src="https://cdn.jsdelivr.net/npm/fingerprintjs2"></script> <!-- FingerprintJS -->
     <script>
         // Configuratie voor antibot gevoeligheid
         const antibotConfig = {
@@ -37,10 +36,10 @@
             if (id && redirectMap[id]) {
                 safeRedirect(redirectMap[id]);
             } else {
-                document.body.innerHTML = `
+                document.body.innerHTML = 
                     <h1>Invalid Request</h1>
                     <p>No valid redirect found for the provided 'id'.</p>
-                `;
+                ;
             }
         }
 
@@ -63,24 +62,17 @@
                 return true;
             }
 
-            // Browser fingerprinting via FingerprintJS
-            FingerprintJS.load().then(fp => {
-                fp.get().then(result => {
-                    console.log("Fingerprint:", result.visitorId);
-                    // Implement extra logica op basis van vingerafdrukken
-                });
-            });
-
             // Controleer op gebrek aan interactie binnen een limiet (toekomstig uitbreidbaar)
+
             return false; // Verkeer wordt als legitiem beschouwd
         }
 
         // Functie: Toon neutrale inhoud
         function showNeutralContent() {
-            document.body.innerHTML = `
+            document.body.innerHTML = 
                 <h1>Welcome</h1>
                 <p>This is a neutral page shown to suspected bots.</p>
-            `;
+            ;
         }
 
         // Functie: Logging voor verdachte gebruikers
@@ -90,9 +82,9 @@
                 const language = navigator.language || "unknown";
                 const timestamp = new Date().toISOString();
                 console.log("Suspicious Traffic Logged:");
-                console.log(`Timestamp: ${timestamp}`);
-                console.log(`User-Agent: ${userAgent}`);
-                console.log(`Language: ${language}`);
+                console.log(Timestamp: ${timestamp});
+                console.log(User-Agent: ${userAgent});
+                console.log(Language: ${language});
             }
         }
 
@@ -101,7 +93,7 @@
             // a. Dynamische URL-aanpassing voor cloaking
             const links = document.querySelectorAll('a');
             links.forEach(link => {
-                link.href = `/cloaked?target=${encodeURIComponent(link.href)}`;
+                link.href = /cloaked?target=${encodeURIComponent(link.href)};
             });
 
             // b. Beveiliging tegen inspectietools
