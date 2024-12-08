@@ -24,23 +24,65 @@
             return urlParams.get(param);
         }
 
-        // Functie: Dynamische redirect gebaseerd op 'id'
+        // Utility function: Encrypt IDs (e.g., Base64)
+        function encryptID(id) {
+            return btoa(id);
+        }
+
+        // Utility function: Decrypt IDs
+        function decryptID(encryptedId) {
+            try {
+                return atob(encryptedId);
+            } catch (e) {
+                console.error('Invalid ID encryption:', e);
+                return null;
+            }
+        }
+
+        // Utility function: Generate a time-sensitive token
+        function generateToken(id) {
+            const secret = 'your_secret_key'; // Replace with a secure key
+            const timestamp = Math.floor(Date.now() / 1000); // Current time in seconds
+            return btoa(`${id}:${timestamp}:${secret}`);
+        }
+
+        // Validate token server-side (to be implemented server-side)
+        function isValidToken(token) {
+            // Stub for server-side token validation
+            return true; // Replace with actual server-side validation logic
+        }
+
+        // Utility function: Validate SHA256 hash
+        function validateHash(id, hash) {
+            const secret = 'your_secret_key';
+            const generatedHash = CryptoJS.SHA256(`${id}:${secret}`).toString();
+            return generatedHash === hash;
+        }
+
+        // Redirect based on encrypted ID with validation
         function redirectBasedOnId() {
-            const id = getQueryParam("id");
+            const encryptedId = getQueryParam("id");
+            const hash = getQueryParam("hash");
+            const id = decryptID(encryptedId);
+
+            if (!id || !validateHash(id, hash)) {
+                document.body.textContent = 'Invalid Request';
+                return;
+            }
+
             const redirectMap = {
                 "123": "https://youtube.com",
                 "456": "https://google.com",
                 "789": "https://facebook.com"
             };
 
-            if (id && redirectMap[id]) {
-                window.location.href = redirectMap[id];
-            } else {
-                document.body.innerHTML = `
-                    <h1>Invalid Request</h1>
-                    <p>No valid redirect found for the provided 'id'.</p>
-                `;
+            const url = redirectMap[id];
+            if (!url) {
+                document.body.textContent = 'Invalid Request';
+                return;
             }
+
+            window.location.href = url;
         }
 
         // Functie: Antibotdetectie
@@ -103,59 +145,75 @@
                 }
             });
 
-            // c. Tijdgebaseerde cloaking
-            setTimeout(() => {
-                console.log("Cloaking check passed: showing actual links.");
-            }, 2000);
+            // c. Extra cloaking logica
+            console.log("Link cloaking initialized.");
         }
 
-        // Functie: Veilige redirect implementatie
-        function safeRedirect(url) {
-            // Valideer URL voordat er wordt doorgestuurd
-            try {
-                const validatedUrl = new URL(url);
-                window.location.href = validatedUrl.href;
-            } catch (error) {
-                console.error("Invalid URL provided for redirect:", url);
-            }
-        }
-
-        // Monitoring en Optimalisatie
-        function monitorAndOptimize() {
-            // a. Real-time monitoring van gebruikersgedrag
-            window.addEventListener('mousemove', () => console.log("Mouse movement detected"));
-
-            // b. Optimalisaties toepassen
-            document.body.style.transition = "opacity 0.3s ease";
-        }
-
-        // Uitvoeren van logica bij het laden van de pagina
-        document.addEventListener("DOMContentLoaded", () => {
-            improvedLinkCloaking();
-            const isBot = detectBot();
+        // Anti-Bot Detection Logic
+        function detectBots() {
+            const isBot = navigator.webdriver || /bot|crawl|spider|robot|crawling/i.test(navigator.userAgent);
 
             if (isBot) {
-                logSuspectedTraffic();
-
-                if (antibotConfig.redirectBots) {
-                    window.location.href = antibotConfig.whitePage;
-                } else if (antibotConfig.showNeutralPage) {
-                    showNeutralContent();
-                }
-            } else {
-                setTimeout(() => {
-                    redirectBasedOnId();
-                }, antibotConfig.trustedDelay);
-
-                monitorAndOptimize();
+                document.body.textContent = 'Access Denied';
+                return true;
             }
-        });
+
+            let interactionDetected = false;
+            window.addEventListener('mousemove', () => interactionDetected = true);
+            window.addEventListener('click', () => interactionDetected = true);
+            window.addEventListener('scroll', () => interactionDetected = true);
+
+            setTimeout(() => {
+                if (!interactionDetected) {
+                    document.body.textContent = 'Access Denied';
+                }
+            }, 5000);
+
+            return false;
+        }
+
+        // Monitoring and Logging
+        function logSuspiciousActivity(activity) {
+            fetch('/log', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(activity),
+            });
+        }
+
+        function setupLogging() {
+            window.addEventListener('error', (e) => {
+                logSuspiciousActivity({ type: 'error', message: e.message, stack: e.error?.stack });
+            });
+
+            window.addEventListener('unhandledrejection', (e) => {
+                logSuspiciousActivity({ type: 'promise-rejection', message: e.reason });
+            });
+        }
+
+        // Strict Content Security Policy
+        function applyCSP() {
+            const meta = document.createElement('meta');
+            meta.httpEquiv = 'Content-Security-Policy';
+            meta.content = "default-src 'self';";
+            document.head.appendChild(meta);
+        }
+
+        // Main Entry Point
+        function init() {
+            if (detectBots()) return;
+            logSuspectedTraffic();
+            redirectBasedOnId();
+            improvedLinkCloaking();
+            applyCSP();
+            setupLogging();
+        }
+
+        // Initialize the script
+        init();
     </script>
-    <noscript>
-        <style>body { display: none; }</style>
-        <h1>JavaScript Required</h1>
-        <p>This page requires JavaScript to function properly. Please enable JavaScript in your browser.</p>
-    </noscript>
 </head>
-<body></body>
+<body>
+    <h1>Antibot & Cloaking System Active</h1>
+</body>
 </html>
