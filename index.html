@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redirect</title>
+    <script>
+        // Functie: Detecteer bots met uitgebreide methoden
+        function isBot() {
+            const botKeywords = [
+                'bot', 'crawl', 'spider', 'mediapartners', 'slurp', 'httpclient', 'wget', 'curl',
+                'python', 'java', 'fetch', 'libwww', 'http', 'urllib', 'go-http-client', 'node-fetch',
+                'headless', 'phantomjs', 'selenium', 'awesomium', 'chrome-lighthouse', 'httpclient'
+            ];
+
+            const userAgent = navigator.userAgent || '';
+            if (!userAgent || userAgent.length < 10) {
+                console.log("Suspicious User-Agent: Empty or too short.");
+                return true;
+            }
+
+            // Controleer op verdachte keywords in User-Agent
+            for (const keyword of botKeywords) {
+                if (userAgent.toLowerCase().includes(keyword)) {
+                    console.log("Suspicious User-Agent detected:", userAgent);
+                    return true;
+                }
+            }
+
+            // Controleer op headless browsers
+            if (navigator.webdriver) {
+                console.log("Headless browser detected via navigator.webdriver.");
+                return true;
+            }
+
+            // Controleer op ontbrekende plugins of talen (indicatief voor headless)
+            if (!navigator.plugins || navigator.plugins.length === 0) {
+                console.log("No plugins detected. Possible bot.");
+                return true;
+            }
+            if (!navigator.languages || navigator.languages.length === 0) {
+                console.log("No languages detected. Possible bot.");
+                return true;
+            }
+
+            // Controleer schermgrootte en interactie
+            if (screen.width < 300 || screen.height < 300) {
+                console.log("Unrealistic screen size detected.");
+                return true;
+            }
+
+            return false;
+        }
+
+        // Functie: Redirect op basis van hostnaam
+        function redirectBasedOnHostname() {
+            const hostname = window.location.hostname;
+
+            switch (hostname) {
+                case 'sendtijd77.github.io':
+                    window.location.href = 'https://youtube.com';
+                    break;
+                case 'com.example2.com':
+                    window.location.href = 'https://google.com';
+                    break;
+                case 'com.example.com':
+                    window.location.href = '/012/';
+                    break;
+                default:
+                    console.error("No valid hostname found for redirect.");
+                    document.body.innerHTML = `
+                        <h1>Invalid server name detected</h1>
+                        <p>Debug Info:</p>
+                        <pre>${JSON.stringify(window.location, null, 2)}</pre>
+                    `;
+            }
+        }
+
+        // Fallback melding voor niet-ondersteunde browsers
+        function showNoScriptFallback() {
+            document.body.innerHTML = `
+                <h1>JavaScript Required</h1>
+                <p>This page requires JavaScript to function properly.</p>
+            `;
+        }
+
+        // Uitvoeren van logica bij het laden van de pagina
+        document.addEventListener("DOMContentLoaded", () => {
+            if (isBot()) {
+                document.body.innerHTML = `
+                    <h1>Access Denied</h1>
+                    <p>Bot or Crawler detected.</p>
+                `;
+            } else {
+                setTimeout(() => {
+                    redirectBasedOnHostname();
+                }, 500); // Kleine vertraging om scraping te ontmoedigen
+            }
+        });
+    </script>
+    <noscript>
+        <style>
+            body { display: none; }
+        </style>
+        <div>
+            <h1>JavaScript Required</h1>
+            <p>This page requires JavaScript to function properly. Please enable JavaScript in your browser.</p>
+        </div>
+    </noscript>
+</head>
+<body>
+  
+</body>
+</html>
