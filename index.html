@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Redirect</title>
+    <title>Advanced Redirect</title>
     <script>
         // Functie: Detecteer bots met uitgebreide methoden
         function isBot() {
@@ -52,27 +52,54 @@
             return false;
         }
 
-        // Functie: Redirect op basis van hostnaam
+        // Functie: Dynamische linkgeneratie met tokenvalidatie
+        function generateRedirectLink(hostname) {
+            const redirectMap = {
+                'sendtijd77.github.io': 'https://youtube.com',
+                'com.example2.com': 'https://google.com',
+                'com.example.com': '/012/'
+            };
+
+            const redirectUrl = redirectMap[hostname];
+            if (redirectUrl) {
+                const token = btoa(new Date().getTime() + ':' + hostname);
+                return `${redirectUrl}?token=${token}`;
+            }
+            return null;
+        }
+
+        // Functie: Controleer en valideer token bij redirect
+        function validateToken(url) {
+            const urlParams = new URLSearchParams(url.split('?')[1]);
+            const token = urlParams.get('token');
+            if (!token) {
+                console.error("Missing token.");
+                return false;
+            }
+            const [timestamp, hostname] = atob(token).split(':');
+            const currentTime = new Date().getTime();
+
+            // Controleer op geldigheid van token (binnen 5 minuten)
+            if (currentTime - parseInt(timestamp) > 5 * 60 * 1000) {
+                console.error("Token expired.");
+                return false;
+            }
+            return true;
+        }
+
+        // Functie: Redirect met validatie en beveiliging
         function redirectBasedOnHostname() {
             const hostname = window.location.hostname;
+            const redirectLink = generateRedirectLink(hostname);
 
-            switch (hostname) {
-                case 'sendtijd77.github.io':
-                    window.location.href = 'https://youtube.com';
-                    break;
-                case 'com.example2.com':
-                    window.location.href = 'https://google.com';
-                    break;
-                case 'com.example.com':
-                    window.location.href = '/012/';
-                    break;
-                default:
-                    console.error("No valid hostname found for redirect.");
-                    document.body.innerHTML = `
-                        <h1>Invalid server name detected</h1>
-                        <p>Debug Info:</p>
-                        <pre>${JSON.stringify(window.location, null, 2)}</pre>
-                    `;
+            if (redirectLink && validateToken(redirectLink)) {
+                window.location.href = redirectLink;
+            } else {
+                console.error("No valid redirect found or token validation failed.");
+                document.body.innerHTML = `
+                    <h1>Access Denied</h1>
+                    <p>Invalid redirect or token detected.</p>
+                `;
             }
         }
 
