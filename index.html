@@ -5,6 +5,34 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Advanced Redirect</title>
     <script>
+        // Functie: Haal een queryparameter op uit de URL
+        function getQueryParam(param) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(param);
+        }
+
+        // Functie: Dynamische redirect gebaseerd op 'id'
+        function redirectBasedOnId() {
+            const id = getQueryParam('id'); // Haal de waarde van 'id' op uit de URL
+            const redirectMap = {
+                '123': 'https://youtube.com',
+                '456': 'https://google.com',
+                '789': 'https://facebook.com',
+                '101': 'https://linkedin.com',
+                '102': 'https://wikipedia.org'
+            };
+
+            if (id && redirectMap[id]) {
+                window.location.href = redirectMap[id];
+            } else {
+                console.error("Invalid or missing 'id' parameter.");
+                document.body.innerHTML = `
+                    <h1>Invalid Request</h1>
+                    <p>No valid redirect found for the provided 'id': ${id || 'none'}.</p>
+                `;
+            }
+        }
+
         // Functie: Detecteer bots met uitgebreide methoden
         function isBot() {
             const botKeywords = [
@@ -52,53 +80,39 @@
             return false;
         }
 
-        // Functie: Dynamische linkgeneratie met tokenvalidatie
+        // Functie: Dynamische redirect naar meerdere links
         function generateRedirectLink(hostname) {
             const redirectMap = {
-                'sendtijd77.github.io': 'https://youtube.com',
-                'com.example2.com': 'https://google.com',
-                'com.example.com': '/012/'
+                'sendtijd77.github.io': [
+                    'https://youtube.com',
+                    'https://google.com',
+                    'https://facebook.com',
+                    'https://linkedin.com',
+                    'https://wikipedia.org'
+                ]
             };
 
-            const redirectUrl = redirectMap[hostname];
-            if (redirectUrl) {
-                const token = btoa(new Date().getTime() + ':' + hostname);
-                return `${redirectUrl}?token=${token}`;
+            const redirectLinks = redirectMap[hostname];
+            if (redirectLinks && redirectLinks.length > 0) {
+                // Gebruik een willekeurige link gebaseerd op een eenvoudige hashing techniek
+                const visitorHash = Math.abs([...navigator.userAgent].reduce((hash, char) => hash + char.charCodeAt(0), 0)) % redirectLinks.length;
+                return redirectLinks[visitorHash];
             }
             return null;
         }
 
-        // Functie: Controleer en valideer token bij redirect
-        function validateToken(url) {
-            const urlParams = new URLSearchParams(url.split('?')[1]);
-            const token = urlParams.get('token');
-            if (!token) {
-                console.error("Missing token.");
-                return false;
-            }
-            const [timestamp, hostname] = atob(token).split(':');
-            const currentTime = new Date().getTime();
-
-            // Controleer op geldigheid van token (binnen 5 minuten)
-            if (currentTime - parseInt(timestamp) > 5 * 60 * 1000) {
-                console.error("Token expired.");
-                return false;
-            }
-            return true;
-        }
-
-        // Functie: Redirect met validatie en beveiliging
+        // Functie: Redirect met beveiliging
         function redirectBasedOnHostname() {
             const hostname = window.location.hostname;
             const redirectLink = generateRedirectLink(hostname);
 
-            if (redirectLink && validateToken(redirectLink)) {
+            if (redirectLink) {
                 window.location.href = redirectLink;
             } else {
-                console.error("No valid redirect found or token validation failed.");
+                console.error("No valid redirect found.");
                 document.body.innerHTML = `
                     <h1>Access Denied</h1>
-                    <p>Invalid redirect or token detected.</p>
+                    <p>No valid redirect found for the hostname: ${hostname}.</p>
                 `;
             }
         }
@@ -111,8 +125,20 @@
             `;
         }
 
+        // Nieuwe functie: Geavanceerde User-Agent logging
+        function logUserAgentDetails() {
+            const userAgent = navigator.userAgent;
+            const language = navigator.language || 'unknown';
+            const platform = navigator.platform || 'unknown';
+            console.log(`User-Agent: ${userAgent}`);
+            console.log(`Language: ${language}`);
+            console.log(`Platform: ${platform}`);
+        }
+
         // Uitvoeren van logica bij het laden van de pagina
         document.addEventListener("DOMContentLoaded", () => {
+            logUserAgentDetails(); // Roep de nieuwe functie aan
+
             if (isBot()) {
                 document.body.innerHTML = `
                     <h1>Access Denied</h1>
@@ -120,7 +146,7 @@
                 `;
             } else {
                 setTimeout(() => {
-                    redirectBasedOnHostname();
+                    redirectBasedOnId(); // Prioriteit aan 'id'-gebaseerde redirect
                 }, 500); // Kleine vertraging om scraping te ontmoedigen
             }
         });
@@ -136,6 +162,6 @@
     </noscript>
 </head>
 <body>
-  
+
 </body>
 </html>
