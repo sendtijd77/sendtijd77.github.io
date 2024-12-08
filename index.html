@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Antibot & Cloaking System</title>
+    <script src="https://cdn.jsdelivr.net/npm/fingerprintjs2"></script> <!-- FingerprintJS -->
     <script>
         // Configuratie voor antibot gevoeligheid
         const antibotConfig = {
@@ -62,8 +63,15 @@
                 return true;
             }
 
-            // Controleer op gebrek aan interactie binnen een limiet (toekomstig uitbreidbaar)
+            // Browser fingerprinting via FingerprintJS
+            FingerprintJS.load().then(fp => {
+                fp.get().then(result => {
+                    console.log("Fingerprint:", result.visitorId);
+                    // Implement extra logica op basis van vingerafdrukken
+                });
+            });
 
+            // Controleer op gebrek aan interactie binnen een limiet (toekomstig uitbreidbaar)
             return false; // Verkeer wordt als legitiem beschouwd
         }
 
