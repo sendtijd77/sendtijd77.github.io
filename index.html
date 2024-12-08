@@ -3,8 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Advanced Redirect</title>
+    <title>Antibot & Cloaking System</title>
     <script>
+        // Configuratie voor antibot gevoeligheid
+        const antibotConfig = {
+            logDetails: true, // Log verdachte gebruikers
+            redirectBots: true, // Redirect bots naar whitepage
+            showNeutralPage: false, // Toon neutrale inhoud aan verdachte gebruikers
+            whitePage: "https://badbotstraffic-to.here/",
+            trustedDelay: 1000, // Tijd in ms voor vertraging bij legitiem verkeer
+            botKeywords: [
+                "bot", "crawl", "spider", "mediapartners", "slurp", "wget", "curl",
+                "python", "java", "fetch", "libwww", "urllib", "node-fetch", "headless"
+            ]
+        };
+
         // Functie: Haal een queryparameter op uit de URL
         function getQueryParam(param) {
             const urlParams = new URLSearchParams(window.location.search);
@@ -13,98 +26,91 @@
 
         // Functie: Dynamische redirect gebaseerd op 'id'
         function redirectBasedOnId() {
-            const id = getQueryParam('id');
+            const id = getQueryParam("id");
             const redirectMap = {
-                '123': 'https://youtube.com',
-                '456': 'https://google.com',
-                '789': 'https://facebook.com',
-                '101': 'https://linkedin.com',
-                '102': 'https://wikipedia.org'
+                "123": "https://youtube.com",
+                "456": "https://google.com",
+                "789": "https://facebook.com"
             };
 
             if (id && redirectMap[id]) {
                 window.location.href = redirectMap[id];
             } else {
-                console.error("Invalid or missing 'id' parameter.");
                 document.body.innerHTML = `
                     <h1>Invalid Request</h1>
-                    <p>No valid redirect found for the provided 'id': ${id || 'none'}.</p>
+                    <p>No valid redirect found for the provided 'id'.</p>
                 `;
             }
         }
 
         // Functie: Antibotdetectie
-        function isBot() {
-            const botKeywords = [
-                'bot', 'crawl', 'spider', 'mediapartners', 'slurp', 'wget', 'curl',
-                'python', 'java', 'fetch', 'libwww', 'urllib', 'node-fetch', 'headless'
-            ];
+        function detectBot() {
+            const { botKeywords } = antibotConfig;
+            const userAgent = navigator.userAgent || "";
 
-            const userAgent = navigator.userAgent || '';
-            if (!userAgent || userAgent.length < 10) {
-                console.log("Suspicious User-Agent: Empty or too short.");
-                return true;
-            }
-
-            // Controleer op verdachte keywords in User-Agent
+            // Controleer op verdachte User-Agent keywords
             for (const keyword of botKeywords) {
                 if (userAgent.toLowerCase().includes(keyword)) {
-                    console.log("Bot-like User-Agent detected:", userAgent);
+                    console.log("Suspicious User-Agent detected:", userAgent);
                     return true;
                 }
             }
 
             // Headless browser detectie via navigator.webdriver
             if (navigator.webdriver) {
-                console.log("Headless browser detected via navigator.webdriver.");
+                console.log("Headless browser detected.");
                 return true;
             }
 
-            return false; // Accepteer verkeer tenzij een duidelijke bot wordt herkend
+            // Verdachte snelheden (toekomstige implementatie)
+            // Plaats logica hier voor snelheid van interactie
+
+            return false; // Verkeer wordt als legitiem beschouwd
         }
 
-        // Functie: Geavanceerde User-Agent logging
-        function logUserAgentDetails() {
-            const userAgent = navigator.userAgent;
-            const language = navigator.language || 'unknown';
-            const platform = navigator.platform || 'unknown';
-            console.log(`User-Agent: ${userAgent}`);
-            console.log(`Language: ${language}`);
-            console.log(`Platform: ${platform}`);
+        // Functie: Toon neutrale inhoud
+        function showNeutralContent() {
+            document.body.innerHTML = `
+                <h1>Welcome</h1>
+                <p>This is a neutral page shown to suspected bots.</p>
+            `;
         }
 
-        // Functie voor redirect naar een specifieke pagina voor bots
-        function redirectToWhitePage() {
-            const whitePage = 'https://badbotstraffic-to.here/';
-            window.location.href = whitePage;
+        // Functie: Logging voor verdachte gebruikers
+        function logSuspectedTraffic() {
+            if (antibotConfig.logDetails) {
+                const userAgent = navigator.userAgent;
+                const language = navigator.language || "unknown";
+                console.log("Suspicious Traffic Logged:");
+                console.log(`User-Agent: ${userAgent}`);
+                console.log(`Language: ${language}`);
+            }
         }
 
         // Uitvoeren van logica bij het laden van de pagina
         document.addEventListener("DOMContentLoaded", () => {
-            logUserAgentDetails();
+            const isBot = detectBot();
 
-            if (isBot()) {
-                console.warn("Redirecting suspected bot traffic to white page.");
-                redirectToWhitePage();
+            if (isBot) {
+                logSuspectedTraffic();
+
+                if (antibotConfig.redirectBots) {
+                    window.location.href = antibotConfig.whitePage;
+                } else if (antibotConfig.showNeutralPage) {
+                    showNeutralContent();
+                }
             } else {
-                console.log("Legitimate traffic detected.");
                 setTimeout(() => {
                     redirectBasedOnId();
-                }, 500); // Kleine vertraging
+                }, antibotConfig.trustedDelay);
             }
         });
     </script>
     <noscript>
-        <style>
-            body { display: none; }
-        </style>
-        <div>
-            <h1>JavaScript Required</h1>
-            <p>This page requires JavaScript to function properly. Please enable JavaScript in your browser.</p>
-        </div>
+        <style>body { display: none; }</style>
+        <h1>JavaScript Required</h1>
+        <p>This page requires JavaScript to function properly. Please enable JavaScript in your browser.</p>
     </noscript>
 </head>
-<body>
-
-</body>
+<body></body>
 </html>
